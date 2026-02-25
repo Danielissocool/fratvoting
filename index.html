@@ -6,97 +6,23 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --phi-blue: #2596be;
-      --phi-white: #ffffff;
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #0f0f0f;
-      color: white;
-      text-align: center;
-      padding: 40px 20px;
-      margin: 0;
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-
-    /* REFINED WATERMARK */
-    body::before {
-      content: "";
-      position: fixed;
-      top: -10%; left: -10%;
-      width: 120%; height: 120%;
-      background-image: url("data:image/svg+xml,%3Csvg width='800' height='600' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50' y='300' font-family='Poppins' font-size='180' font-weight='300' fill='rgba(37, 150, 190, 0.06)' transform='rotate(-20 50 300)'%3EΦ Δ Θ%3C/text%3E%3C/svg%3E");
-      background-repeat: repeat;
-      z-index: -1;
-      filter: blur(1px);
-      pointer-events: none;
-      animation: drift 40s linear infinite;
-    }
-
-    @keyframes drift {
-      from { background-position: 0 0; }
-      to { background-position: 800px 1200px; }
-    }
-
-    h1 {
-      font-size: 3.5rem;
-      margin-bottom: 5px;
-      color: var(--phi-blue);
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      text-shadow: 0 0 15px rgba(37, 150, 190, 0.6);
-    }
-
-    #countdown {
-      font-size: 1.2rem;
-      color: #ff2d55;
-      font-weight: 700;
-      letter-spacing: 2px;
-      margin-bottom: 30px;
-      text-shadow: 0 0 10px rgba(255, 45, 85, 0.3);
-    }
-
+    :root { --phi-blue: #2596be; --phi-white: #ffffff; }
+    body { font-family: 'Poppins', sans-serif; background: #0f0f0f; color: white; text-align: center; padding: 40px 20px; margin: 0; overflow-x: hidden; min-height: 100vh; }
+    body::before { content: ""; position: fixed; top: -10%; left: -10%; width: 120%; height: 120%; background-image: url("data:image/svg+xml,%3Csvg width='800' height='600' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50' y='300' font-family='Poppins' font-size='180' font-weight='300' fill='rgba(37, 150, 190, 0.06)' transform='rotate(-20 50 300)'%3EΦ Δ Θ%3C/text%3E%3C/svg%3E"); background-repeat: repeat; z-index: -1; filter: blur(1px); pointer-events: none; animation: drift 40s linear infinite; }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 800px 1200px; } }
+    h1 { font-size: 3.5rem; margin-bottom: 5px; color: var(--phi-blue); text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px rgba(37, 150, 190, 0.6); }
+    #countdown { font-size: 1.2rem; color: #ff2d55; font-weight: 700; letter-spacing: 2px; margin-bottom: 30px; text-shadow: 0 0 10px rgba(255, 45, 85, 0.3); }
     .container { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
-
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(15px);
-      padding: 30px;
-      border-radius: 20px;
-      margin-bottom: 40px;
-    }
-
-    input, textarea {
-      padding: 12px; width: 80%; max-width: 400px; margin: 10px auto;
-      border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; display: block;
-    }
-
-    button {
-      padding: 14px 28px; background: var(--phi-blue); border: none; border-radius: 8px;
-      color: white; font-weight: 700; cursor: pointer; transition: 0.3s ease; text-transform: uppercase;
-    }
-
+    .glass-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); padding: 30px; border-radius: 20px; margin-bottom: 40px; }
+    input, textarea { padding: 12px; width: 80%; max-width: 400px; margin: 10px auto; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; display: block; font-family: 'Poppins'; }
+    button { padding: 14px 28px; background: var(--phi-blue); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s ease; text-transform: uppercase; }
     button:hover { background: #ff2d55; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 45, 85, 0.4); }
-
     .nominee-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; }
-    
-    .card {
-      background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; width: 300px; position: relative;
-      transition: 0.4s ease;
-    }
-
+    .card { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; width: 300px; position: relative; transition: 0.4s ease; }
     .card:hover { transform: scale(1.03); border-color: var(--phi-blue); }
-
     .leader-card { border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
     .crown { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 45px; filter: drop-shadow(0 0 5px gold); }
-
     .nominee-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
-
     .reason-text { font-size: 0.95rem; line-height: 1.4; font-style: italic; color: #aaa; margin: 15px 0; min-height: 50px; }
   </style>
 </head>
@@ -109,15 +35,14 @@
 
   <div class="glass-panel" id="main-ui">
     <h3>Nominate a Brother</h3>
-    <input id="name" placeholder="Name">
+    <input id="name" placeholder="Name" maxlength="30">
     <input id="bond" placeholder="Bond #">
-    <textarea id="reason" placeholder="Why are they nominated?"></textarea>
+    <textarea id="reason" placeholder="Why are they nominated?" maxlength="200"></textarea>
     <input type="file" id="image" accept="image/*">
     <button id="submitBtn" onclick="submitNominee()">Post Nomination</button>
   </div>
 
   <hr style="margin:50px 0; border: 0; border-top: 1px solid #333;">
-
   <h2>Current Standings</h2>
   <div id="nomineeList" class="nominee-grid"></div>
 </div>
@@ -128,51 +53,50 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_SYmZfAPD5nNpSINs6vFfIg_8jok_CBS"
 );
 
-// --- 1. TIMER LOGIC ---
+// --- REAL-TIME UPDATES ---
+supabaseClient
+  .channel('schema-db-changes')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'nominees' }, () => {
+    loadNominees();
+  })
+  .subscribe();
+
+// --- TIMER LOGIC ---
 const targetDate = new Date("March 1, 2026 00:00:00").getTime();
 setInterval(() => {
   const now = new Date().getTime();
   const diff = targetDate - now;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const secs = Math.floor((diff % (1000 * 60)) / 1000);
-  document.getElementById("countdown").innerText = `ENDS IN: ${days}D ${hours}H ${mins}M ${secs}S`;
+  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+  document.getElementById("countdown").innerText = `ENDS IN: ${d}D ${h}H ${m}M ${s}S`;
 }, 1000);
 
-// --- 2. SUBMIT NOMINEE (With Restriction) ---
 async function submitNominee() {
-  if (localStorage.getItem('hasNominated') === 'true') return alert("Already nominated!");
-  
-  const submitBtn = document.getElementById("submitBtn");
-  const name = document.getElementById("name").value;
-  const bond = document.getElementById("bond").value;
-  const reason = document.getElementById("reason").value;
-  const file = document.getElementById("image").files[0];
+  if (localStorage.getItem('hasNominated') === 'true') return alert("One nomination per month!");
+  const name = document.getElementById("name").value, bond = document.getElementById("bond").value, reason = document.getElementById("reason").value, file = document.getElementById("image").files[0];
+  if(!file || !name || !bond) return alert("Fill out the whole form.");
 
-  if(!file || !name) return alert("Photo and name required.");
+  const { data: existing } = await supabaseClient.from("nominees").select("*").eq("bond_number", bond).single();
+  if (existing) {
+    const updatedReason = existing.event_reason + " | " + reason;
+    const newCount = (existing.nomination_count || 1) + 1;
+    await supabaseClient.from("nominees").update({ event_reason: updatedReason, nomination_count: newCount }).eq("id", existing.id);
+    alert(`${name} is already up there! Added your reason to his card.`);
+  } else {
+    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.innerText = "SUBMITTING...";
+    const { data: storageData } = await supabaseClient.storage.from("nominee-images").upload(Date.now() + file.name, file);
+    const url = supabaseClient.storage.from("nominee-images").getPublicUrl(storageData.path).data.publicUrl;
+    await supabaseClient.from("nominees").insert([{ name, bond_number: bond, event_reason: reason, image_url: url, nomination_count: 1 }]);
+  }
 
-  submitBtn.disabled = true;
-  submitBtn.innerText = "SUBMITTING...";
-
-  const { data, error } = await supabaseClient.storage.from("nominee-images").upload(Date.now() + file.name, file);
-  if (error) { alert("Upload error."); submitBtn.disabled = false; return; }
-
-  const imageUrl = supabaseClient.storage.from("nominee-images").getPublicUrl(data.path).data.publicUrl;
-  await supabaseClient.from("nominees").insert([{ name, bond_number: bond, event_reason: reason, image_url: imageUrl }]);
-
-  confetti({ particleCount: 200, colors: ['#2596be', '#ffffff'] });
-  
   localStorage.setItem('hasNominated', 'true');
-  location.reload(); // Refresh to hide the form immediately
+  confetti({ particleCount: 200, colors: ['#2596be', '#ffffff'] });
+  setTimeout(() => location.reload(), 2000);
 }
 
-// --- 3. VOTE (With Global Lock) ---
 async function vote(id, currentVotes) {
   if (localStorage.getItem('hasVotedTotal') === 'true') return alert("One vote only!");
-  
   const { error } = await supabaseClient.from("nominees").update({ votes: currentVotes + 1 }).eq("id", id);
-  
   if (!error) {
     localStorage.setItem('hasVotedTotal', 'true');
     localStorage.setItem('voted_' + id, 'true');  
@@ -181,35 +105,34 @@ async function vote(id, currentVotes) {
   }
 }
 
-// --- 4. LOAD NOMINEES (With Button States) ---
 async function loadNominees() {
   const { data } = await supabaseClient.from("nominees").select("*").order("votes", { ascending: false });
   const container = document.getElementById("nomineeList");
   container.innerHTML = "";
   const maxVotes = data.length > 0 ? Math.max(...data.map(n => n.votes)) : 0;
-  
   const userHasVoted = localStorage.getItem('hasVotedTotal') === 'true';
 
   data.forEach(nominee => {
     const isLeader = nominee.votes === maxVotes && maxVotes > 0;
-    const isTheirSpecificVote = localStorage.getItem('voted_' + nominee.id);
+    const isTheirVote = localStorage.getItem('voted_' + nominee.id);
+    const badge = nominee.nomination_count > 1 ? `<div style="background: var(--phi-blue); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">${nominee.nomination_count}x NOMINATED</div>` : '';
 
     container.innerHTML += `
       <div class="card ${isLeader ? 'leader-card' : ''}">
         ${isLeader ? '<div class="crown">👑</div>' : ''}
         <img src="${nominee.image_url}" class="nominee-img">
+        ${badge}
         <h3>${nominee.name}</h3>
         <p style="font-size: 0.8rem; color: var(--phi-blue); margin-top:0;">BOND #${nominee.bond_number}</p>
         <p class="reason-text">"${nominee.event_reason || 'Nominated for excellence.'}"</p>
         <p><strong>VOTES: ${nominee.votes}</strong></p>
         <button ${userHasVoted ? 'disabled' : ''} onclick="vote('${nominee.id}', ${nominee.votes})">
-          ${isTheirSpecificVote ? 'YOUR VOTE ✅' : (userHasVoted ? 'LOCKED' : 'VOTE')}
+          ${isTheirVote ? 'YOUR VOTE ✅' : (userHasVoted ? 'LOCKED' : 'VOTE')}
         </button>
       </div>`;
   });
 }
 
-// --- 5. INITIALIZE ---
 if (localStorage.getItem('hasNominated') === 'true') {
   document.getElementById("main-ui").innerHTML = "<h3>Nomination Recorded</h3><p>You've already nominated a brother.</p>";
 }
