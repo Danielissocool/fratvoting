@@ -22,20 +22,18 @@
       min-height: 100vh;
     }
 
-    /* REFINED WATERMARK: Thinner but Larger Letters */
+    /* REFINED WATERMARK */
     body::before {
       content: "";
       position: fixed;
-      top: -10%;
-      left: -10%;
-      width: 120%;
-      height: 120%;
+      top: -10%; left: -10%;
+      width: 120%; height: 120%;
       background-image: url("data:image/svg+xml,%3Csvg width='800' height='600' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50' y='300' font-family='Poppins' font-size='180' font-weight='300' fill='rgba(37, 150, 190, 0.06)' transform='rotate(-20 50 300)'%3EΦ Δ Θ%3C/text%3E%3C/svg%3E");
       background-repeat: repeat;
       z-index: -1;
       filter: blur(1px);
       pointer-events: none;
-      animation: drift 100s linear infinite;
+      animation: drift 40s linear infinite;
     }
 
     @keyframes drift {
@@ -43,15 +41,22 @@
       to { background-position: 800px 1200px; }
     }
 
-    /* THE TITLE IS NOW BLUE */
     h1 {
       font-size: 3.5rem;
-      margin-bottom: 10px;
-      color: var(--phi-blue); /* Restored to Blue */
+      margin-bottom: 5px;
+      color: var(--phi-blue);
       text-transform: uppercase;
       letter-spacing: 4px;
-      /* Glow refined to match the blue text */
-      text-shadow: 0 0 15px rgba(37, 150, 190, 0.6), 0 0 30px rgba(37, 150, 190, 0.2);
+      text-shadow: 0 0 15px rgba(37, 150, 190, 0.6);
+    }
+
+    #countdown {
+      font-size: 1.2rem;
+      color: #ff2d55;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px rgba(255, 45, 85, 0.3);
     }
 
     .container { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
@@ -72,7 +77,7 @@
 
     button {
       padding: 14px 28px; background: var(--phi-blue); border: none; border-radius: 8px;
-      color: white; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase;
+      color: white; font-weight: 700; cursor: pointer; transition: 0.3s ease; text-transform: uppercase;
     }
 
     button:hover { background: #ff2d55; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 45, 85, 0.4); }
@@ -82,7 +87,7 @@
     .card {
       background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; width: 300px; position: relative;
-      transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: 0.4s ease;
     }
 
     .card:hover { transform: scale(1.03); border-color: var(--phi-blue); }
@@ -92,22 +97,15 @@
 
     .nominee-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
 
-    /* NOMINATION REASON STYLE: Gray and Italic */
-    .reason-text {
-      font-size: 0.95rem;
-      line-height: 1.4;
-      font-style: italic;
-      color: #aaa;
-      margin: 15px 0;
-      min-height: 50px;
-    }
+    .reason-text { font-size: 0.95rem; line-height: 1.4; font-style: italic; color: #aaa; margin: 15px 0; min-height: 50px; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h1>Phi Delta Theta</h1>
-  <p style="letter-spacing: 2px; color: #888; margin-top: -10px;">FEBRUARY BROTHER OF THE MONTH</p>
+   <p style="letter-spacing: 2px; color: #888; margin-top: -10px;">FEBRUARY BROTHER OF THE MONTH</p>
+  <div id="countdown">Loading Timer...</div>
 
   <div class="glass-panel" id="main-ui">
     <h3>Nominate a Brother</h3>
@@ -130,6 +128,18 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_SYmZfAPD5nNpSINs6vFfIg_8jok_CBS"
 );
 
+// --- TIMER LOGIC ---
+const targetDate = new Date("March 1, 2026 00:00:00").getTime();
+setInterval(() => {
+  const now = new Date().getTime();
+  const diff = targetDate - now;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const secs = Math.floor((diff % (1000 * 60)) / 1000);
+  document.getElementById("countdown").innerText = `ENDS IN: ${days}D ${hours}H ${mins}M ${secs}S`;
+}, 1000);
+
 async function submitNominee() {
   const submitBtn = document.getElementById("submitBtn");
   const name = document.getElementById("name").value;
@@ -137,49 +147,32 @@ async function submitNominee() {
   const reason = document.getElementById("reason").value;
   const file = document.getElementById("image").files[0];
 
-  if(!file || !name) return alert("We need a name and a photo, brother.");
+  if(!file || !name) return alert("Photo and name required.");
 
   submitBtn.disabled = true;
   submitBtn.innerText = "SUBMITTING...";
 
-  const { data, error } = await supabaseClient.storage
-    .from("nominee-images")
-    .upload(Date.now() + file.name, file);
-
-  if (error) {
-    alert("Upload failed. Try again.");
-    submitBtn.disabled = false;
-    return;
-  }
+  const { data, error } = await supabaseClient.storage.from("nominee-images").upload(Date.now() + file.name, file);
+  if (error) { alert("Upload error."); submitBtn.disabled = false; return; }
 
   const imageUrl = supabaseClient.storage.from("nominee-images").getPublicUrl(data.path).data.publicUrl;
+  await supabaseClient.from("nominees").insert([{ name, bond_number: bond, event_reason: reason, image_url: imageUrl }]);
 
-  await supabaseClient.from("nominees").insert([
-    { name, bond_number: bond, event_reason: reason, image_url: imageUrl }
-  ]);
-
-  confetti({ particleCount: 200, spread: 100, colors: ['#2596be', '#ffffff'] });
-  
+  confetti({ particleCount: 200, colors: ['#2596be', '#ffffff'] });
   document.getElementById("name").value = "";
   document.getElementById("bond").value = "";
   document.getElementById("reason").value = "";
   submitBtn.innerText = "POSTED!";
   setTimeout(() => { submitBtn.innerText = "POST NOMINATION"; submitBtn.disabled = false; }, 3000);
-  
   loadNominees();
 }
 
 async function vote(id, currentVotes) {
-  if (localStorage.getItem('voted_' + id)) return alert("You already hyped this man up!");
-
+  if (localStorage.getItem('voted_' + id)) return alert("Already voted!");
   const { error } = await supabaseClient.from("nominees").update({ votes: currentVotes + 1 }).eq("id", id);
-
   if (!error) {
     localStorage.setItem('voted_' + id, 'true');
-    confetti({
-      particleCount: 150,
-      colors: ['#2596be', '#ffffff', '#ffd700']
-    });
+    confetti({ particleCount: 150, colors: ['#2596be', '#ffffff', '#ffd700'] });
     loadNominees();
   }
 }
@@ -188,33 +181,27 @@ async function loadNominees() {
   const { data } = await supabaseClient.from("nominees").select("*").order("votes", { ascending: false });
   const container = document.getElementById("nomineeList");
   container.innerHTML = "";
-
   const maxVotes = data.length > 0 ? Math.max(...data.map(n => n.votes)) : 0;
 
   data.forEach(nominee => {
     const isLeader = nominee.votes === maxVotes && maxVotes > 0;
     const hasVoted = localStorage.getItem('voted_' + nominee.id);
-
     container.innerHTML += `
       <div class="card ${isLeader ? 'leader-card' : ''}">
         ${isLeader ? '<div class="crown">👑</div>' : ''}
         <img src="${nominee.image_url}" class="nominee-img">
-        <h3 style="margin: 5px 0;">${nominee.name}</h3>
+        <h3>${nominee.name}</h3>
         <p style="font-size: 0.8rem; color: var(--phi-blue); margin-top:0;">BOND #${nominee.bond_number}</p>
-        <p class="reason-text">
-            "${nominee.event_reason || 'Nominated for being a top-tier brother.'}"
-        </p>
+        <p class="reason-text">"${nominee.event_reason || 'Nominated for excellence.'}"</p>
         <p><strong>VOTES: ${nominee.votes}</strong></p>
         <button ${hasVoted ? 'disabled' : ''} onclick="vote('${nominee.id}', ${nominee.votes})">
           ${hasVoted ? 'VOTED ✅' : 'VOTE'}
         </button>
-      </div>
-    `;
+      </div>`;
   });
 }
 
 loadNominees();
 </script>
-
 </body>
 </html>
