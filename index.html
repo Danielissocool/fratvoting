@@ -6,7 +6,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --phi-blue: #2596be; --phi-white: #ffffff; }
+    :root { --phi-blue: #2596be; --phi-white: #ffffff; --gold: #ffd700; }
     body { font-family: 'Poppins', sans-serif; background: #0f0f0f; color: white; text-align: center; padding: 40px 20px; margin: 0; overflow-x: hidden; min-height: 100vh; }
     body::before { content: ""; position: fixed; top: -10%; left: -10%; width: 120%; height: 120%; background-image: url("data:image/svg+xml,%3Csvg width='800' height='600' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50' y='300' font-family='Poppins' font-size='180' font-weight='300' fill='rgba(37, 150, 190, 0.06)' transform='rotate(-20 50 300)'%3EΦ Δ Θ%3C/text%3E%3C/svg%3E"); background-repeat: repeat; z-index: -1; filter: blur(1px); pointer-events: none; animation: drift 40s linear infinite; }
     @keyframes drift { from { background-position: 0 0; } to { background-position: 800px 1200px; } }
@@ -17,13 +17,18 @@
     input, textarea { padding: 12px; width: 80%; max-width: 400px; margin: 10px auto; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; display: block; font-family: 'Poppins'; }
     button { padding: 14px 28px; background: var(--phi-blue); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s ease; text-transform: uppercase; }
     button:hover { background: #ff2d55; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 45, 85, 0.4); }
+    button:disabled { background: #444; cursor: not-allowed; transform: none; box-shadow: none; }
     .nominee-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; }
     .card { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; width: 300px; position: relative; transition: 0.4s ease; }
     .card:hover { transform: scale(1.03); border-color: var(--phi-blue); }
-    .leader-card { border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
+    .leader-card { border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
     .crown { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 45px; filter: drop-shadow(0 0 5px gold); }
     .nominee-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
     .reason-text { font-size: 0.95rem; line-height: 1.4; font-style: italic; color: #aaa; margin: 15px 0; min-height: 50px; }
+    
+    /* Winner Screen Styles */
+    .winner-display { width: 100%; max-width: 900px; margin: 0 auto; padding: 50px; border: 4px solid var(--gold); border-radius: 30px; background: rgba(255, 215, 0, 0.05); backdrop-filter: blur(20px); box-shadow: 0 0 60px rgba(255, 215, 0, 0.4); animation: glow 3s infinite alternate; }
+    @keyframes glow { from { box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); } to { box-shadow: 0 0 60px rgba(255, 215, 0, 0.5); } }
   </style>
 </head>
 <body>
@@ -31,7 +36,7 @@
 <div class="container">
   <h1>Phi Delta Theta</h1>
   <p style="letter-spacing: 2px; color: #888; margin-top: -10px;">FEBRUARY BROTHER OF THE MONTH</p>
-  <div id="countdown">Loading Timer...</div>
+  <div id="countdown">Loading...</div>
 
   <div class="glass-panel" id="main-ui">
     <h3>Nominate a Brother</h3>
@@ -43,7 +48,7 @@
   </div>
 
   <hr style="margin:50px 0; border: 0; border-top: 1px solid #333;">
-  <h2>Current Standings</h2>
+  <h2 id="standings-title">Current Standings</h2>
   <div id="nomineeList" class="nominee-grid"></div>
 </div>
 
@@ -53,27 +58,43 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_SYmZfAPD5nNpSINs6vFfIg_8jok_CBS"
 );
 
-supabaseClient
-  .channel('schema-db-changes')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'nominees' }, () => {
-    loadNominees();
-  })
-  .subscribe();
-
 const targetDate = new Date("March 1, 2026 00:00:00").getTime();
+const resetDate = new Date("March 11, 2026 00:00:00").getTime();
+
+function getVotingPhase() {
+  const now = new Date().getTime();
+  if (now > resetDate) return "RESET";
+  if (now > targetDate) return "WINNER";
+  return "ACTIVE";
+}
+
 setInterval(() => {
   const now = new Date().getTime();
-  const diff = targetDate - now;
-  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-  document.getElementById("countdown").innerText = `ENDS IN: ${d}D ${h}H ${m}M ${s}S`;
+  const phase = getVotingPhase();
+  const countdownEl = document.getElementById("countdown");
+
+  if (phase === "ACTIVE") {
+    const diff = targetDate - now;
+    const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+    countdownEl.innerText = `ENDS IN: ${d}D ${h}H ${m}M ${s}S`;
+  } else if (phase === "WINNER") {
+    countdownEl.innerText = "VOTING CLOSED - CHAMPION REVEALED";
+    countdownEl.style.color = "var(--gold)";
+  } else {
+    countdownEl.innerText = "MARCH NOMINATIONS ARE NOW OPEN!";
+    countdownEl.style.color = "var(--phi-blue)";
+  }
 }, 1000);
 
 async function submitNominee() {
+  if (getVotingPhase() !== "ACTIVE") return alert("Nominations are closed for this month!");
   if (localStorage.getItem('hasNominated') === 'true') return alert("One nomination per month!");
+  
   const name = document.getElementById("name").value, bond = document.getElementById("bond").value, reason = document.getElementById("reason").value, file = document.getElementById("image").files[0];
   if(!file || !name || !bond) return alert("Fill out the whole form.");
 
   const { data: existing } = await supabaseClient.from("nominees").select("*").eq("bond_number", bond).single();
+  
   if (existing) {
     const updatedReason = existing.event_reason + " <br>• " + reason;
     const newCount = (existing.nomination_count || 1) + 1;
@@ -84,7 +105,7 @@ async function submitNominee() {
     submitBtn.innerText = "SUBMITTING...";
     const { data: storageData } = await supabaseClient.storage.from("nominee-images").upload(Date.now() + file.name, file);
     const url = supabaseClient.storage.from("nominee-images").getPublicUrl(storageData.path).data.publicUrl;
-    await supabaseClient.from("nominees").insert([{ name, bond_number: bond, event_reason: reason, image_url: url, nomination_count: 1 }]);
+    await supabaseClient.from("nominees").insert([{ name, bond_number: bond, event_reason: "• " + reason, image_url: url, nomination_count: 1 }]);
   }
 
   localStorage.setItem('hasNominated', 'true');
@@ -93,7 +114,9 @@ async function submitNominee() {
 }
 
 async function vote(id, currentVotes) {
+  if (getVotingPhase() !== "ACTIVE") return alert("Voting is closed!");
   if (localStorage.getItem('hasVotedTotal') === 'true') return alert("One vote only!");
+  
   const { error } = await supabaseClient.from("nominees").update({ votes: currentVotes + 1 }).eq("id", id);
   if (!error) {
     localStorage.setItem('hasVotedTotal', 'true');
@@ -106,33 +129,68 @@ async function vote(id, currentVotes) {
 async function loadNominees() {
   const { data } = await supabaseClient.from("nominees").select("*").order("votes", { ascending: false });
   const container = document.getElementById("nomineeList");
-  container.innerHTML = "";
-  const maxVotes = data.length > 0 ? Math.max(...data.map(n => n.votes)) : 0;
-  const userHasVoted = localStorage.getItem('hasVotedTotal') === 'true';
+  const phase = getVotingPhase();
+  
+  if (!data || data.length === 0) return container.innerHTML = "<p>No nominees yet.</p>";
 
-  data.forEach(nominee => {
-    const isLeader = nominee.votes === maxVotes && maxVotes > 0;
-    const isTheirVote = localStorage.getItem('voted_' + nominee.id);
-    const badge = nominee.nomination_count > 1 ? `<div style="background: var(--phi-blue); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">${nominee.nomination_count}x NOMINATED</div>` : '';
-
-    container.innerHTML += `
-      <div class="card ${isLeader ? 'leader-card' : ''}">
-        ${isLeader ? '<div class="crown">👑</div>' : ''}
-        <img src="${nominee.image_url}" class="nominee-img">
-        ${badge}
-        <h3>${nominee.name}</h3>
-        <p style="font-size: 0.8rem; color: var(--phi-blue); margin-top:0;">BOND #${nominee.bond_number}</p>
-        <p class="reason-text">"${nominee.event_reason || 'Nominated for excellence.'}"</p>
-        <p><strong>VOTES: ${nominee.votes}</strong></p>
-        <button ${userHasVoted ? 'disabled' : ''} onclick="vote('${nominee.id}', ${nominee.votes})">
-          ${isTheirVote ? 'YOUR VOTE ✅' : (userHasVoted ? 'LOCKED' : 'VOTE')}
-        </button>
+  if (phase === "WINNER") {
+    const winner = data[0]; 
+    document.getElementById("main-ui").style.display = "none";
+    document.getElementById("standings-title").innerText = "FEBRUARY CHAMPION";
+    
+    container.innerHTML = `
+      <div class="winner-display">
+        <h1 style="color: var(--gold); font-size: 4.5rem; margin: 0;">👑 WINNER</h1>
+        <h2 style="font-size: 3.5rem; margin: 10px 0;">${winner.name}</h2>
+        <p style="color: var(--phi-blue); font-weight: bold; letter-spacing: 3px;">BOND #${winner.bond_number}</p>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 40px; margin-top: 40px; align-items: flex-start; justify-content: center;">
+          <img src="${winner.image_url}" style="width: 400px; height: 400px; object-fit: cover; border-radius: 20px; border: 6px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <div style="flex: 1; text-align: left; min-width: 320px;">
+             <h3 style="color: var(--gold); text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 10px;">The Hype Wall</h3>
+             <p style="font-size: 1.3rem; line-height: 1.8; font-style: italic; color: #ddd;">
+               "${winner.event_reason}"
+             </p>
+             <div style="background: var(--phi-blue); display: inline-block; padding: 10px 20px; border-radius: 10px; margin-top: 20px;">
+                <strong>TOTAL VOTES: ${winner.votes}</strong>
+             </div>
+          </div>
+        </div>
       </div>`;
-  });
+    
+    // Continuous victory confetti
+    setTimeout(() => {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#ffd700', '#2596be'] });
+    }, 500);
+  } else {
+    container.innerHTML = "";
+    const maxVotes = Math.max(...data.map(n => n.votes));
+    const userHasVoted = localStorage.getItem('hasVotedTotal') === 'true';
+
+    data.forEach(nominee => {
+      const isLeader = nominee.votes === maxVotes && maxVotes > 0;
+      const isTheirVote = localStorage.getItem('voted_' + nominee.id);
+      const badge = nominee.nomination_count > 1 ? `<div style="background: var(--phi-blue); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">${nominee.nomination_count}x NOMINATED</div>` : '';
+
+      container.innerHTML += `
+        <div class="card ${isLeader ? 'leader-card' : ''}">
+          ${isLeader ? '<div class="crown">👑</div>' : ''}
+          <img src="${nominee.image_url}" class="nominee-img">
+          ${badge}
+          <h3>${nominee.name}</h3>
+          <p style="font-size: 0.8rem; color: var(--phi-blue); margin-top:0;">BOND #${nominee.bond_number}</p>
+          <div class="reason-text">"${nominee.event_reason || 'Nominated for excellence.'}"</div>
+          <p><strong>VOTES: ${nominee.votes}</strong></p>
+          <button ${userHasVoted || phase !== "ACTIVE" ? 'disabled' : ''} onclick="vote('${nominee.id}', ${nominee.votes})">
+            ${isTheirVote ? 'YOUR VOTE ✅' : (userHasVoted ? 'LOCKED' : 'VOTE')}
+          </button>
+        </div>`;
+    });
+  }
 }
 
-if (localStorage.getItem('hasNominated') === 'true') {
-  document.getElementById("main-ui").innerHTML = "<h3>Nomination Recorded</h3><p>You've already nominated a brother.</p>";
+if (localStorage.getItem('hasNominated') === 'true' && getVotingPhase() === "ACTIVE") {
+  document.getElementById("main-ui").innerHTML = "<h3>Nomination Recorded</h3><p>You've already hyped a brother this month.</p>";
 }
 loadNominees();
 </script>
