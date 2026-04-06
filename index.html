@@ -9,13 +9,21 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Share+Tech+Mono&display=swap');
         
         body { margin: 0; background: #01040a; color: #e2e2e2; overflow: hidden; font-family: 'Share Tech Mono', monospace; }
-        
+   
+        .atmospheric-glow {
+            position: fixed;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: radial-gradient(circle at 95% 50%, rgba(0, 136, 255, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 2;
+        }
+		
         #globe-viewport {
             position: fixed; 
-            bottom: 40px; 
-            left: 40px; 
-            width: 500px; 
-            height: 500px; 
+            bottom: -120px; 
+            left: -140px; 
+            width: 1100px; 
+            height: 1100px; 
             z-index: 1; 
             pointer-events: none;
         }
@@ -58,7 +66,9 @@
     <div id="music-container" style="display:none;">
         <iframe id="youtube-player" width="1" height="1" src="https://www.youtube.com/embed/sIWnz0x_pSQ?enablejsapi=1&autoplay=1" allow="autoplay" frameborder="0"></iframe>
     </div>
-
+	
+	<div class="atmospheric-glow"></div>
+	
     <div id="globe-viewport">
         <div id="canvas-container" class="w-full h-full"></div>
     </div>
@@ -111,7 +121,7 @@
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        camera.position.z = 2.8; // Tightly frames the 500x500 box
+        camera.position.z = 3; // Tightly frames the 500x500 box
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(renderer.domElement);
@@ -152,15 +162,17 @@
     </script>
 
     <script>
-        // --- 1. SUPABASE UPLINK ---
         const SUPABASE_URL = "https://uaxvtfcptipyaobrubcw.supabase.co";
         const SUPABASE_KEY = "sb_publishable_SYmZfAPD5nNpSINs6vFfIg_8jok_CBS";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 2. TIMER & LOCK LOGIC ---
         let votingPhase = "ACTIVE";
         const now = new Date();
         const targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).getTime();
+
+        const currentMonthKey = now.getFullYear() + "_" + now.getMonth();
+        const NOM_KEY = "hasNominated_" + currentMonthKey;
+        const VOTE_KEY = "hasVotedTotal_" + currentMonthKey;
 
         setInterval(() => {
             const currentTime = new Date().getTime();
@@ -188,7 +200,6 @@
             }
         }, 1000);
 
-        // --- 3. UI HELPERS ---
         function playMusic() {
             const player = document.getElementById('youtube-player');
             player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
@@ -204,7 +215,6 @@
             }
         }
 
-        // --- 4. LEGACY SUBMISSION PORTED TO BO2 UI ---
         async function submitNominee() {
             if (votingPhase !== "ACTIVE") return alert("Voting window closed.");
             if (localStorage.getItem('hasNominated') === 'true') return alert("ONE NOMINATION PER MONTH PERMITTED.");
@@ -253,7 +263,6 @@
             loadNominees();
         }
 
-        // --- 5. LEGACY VOTING LOGIC ---
         async function vote(id, currentVotes) {
             if (votingPhase !== "ACTIVE") return alert("VOTING SECURED. NO FURTHER ENTRIES.");
             if (localStorage.getItem('hasVotedTotal') === 'true') return alert("YOU HAVE ALREADY CAST YOUR VOTE.");
@@ -266,7 +275,6 @@
             }
         }
 
-        // --- 6. LEGACY DATA FEED PORTED TO BO2 CARDS ---
         async function loadNominees() {
             const { data } = await supabaseClient.from("nominees").select("*").order("votes", { ascending: false });
             const container = document.getElementById("nomineeList");
