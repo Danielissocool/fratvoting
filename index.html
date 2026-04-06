@@ -108,7 +108,7 @@
                 <h2 class="text-xs font-bold opacity-50 tracking-[0.8em] text-blue-300">ACTUAL_DATA_FEED</h2>
             </div>
             <div id="nomineeList" class="space-y-4 overflow-y-auto pr-6 max-h-[70vh] interactive pb-10">
-                <div class="text-center opacity-50 italic animate-pulse py-10">ESTABLISHING UPLINK TO DATABASE...</div>
+                <div class="text-center opacity-50 italic animate-pulse py-10">ESTABLISHING CONNECTION...</div>
             </div>
         </section>
     </main>
@@ -162,6 +162,8 @@
     </script>
 
     <script>
+		localStorage.removeItem('hasNominated');
+        localStorage.removeItem('hasVotedTotal');
         const SUPABASE_URL = "https://uaxvtfcptipyaobrubcw.supabase.co";
         const SUPABASE_KEY = "sb_publishable_SYmZfAPD5nNpSINs6vFfIg_8jok_CBS";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -279,7 +281,7 @@
             const { data } = await supabaseClient.from("nominees").select("*").order("votes", { ascending: false });
             const container = document.getElementById("nomineeList");
             
-            if (!data || data.length === 0) return container.innerHTML = "<div class='text-center opacity-50 italic py-10'>NO NOMINATIONS DETECTED IN DATABASE.</div>";
+            if (!data || data.length === 0) return container.innerHTML = "<div class='text-center opacity-50 italic py-10'>NO NOMINATIONS DETECTED.</div>";
 
             container.innerHTML = "";
             const maxVotes = Math.max(...data.map(n => n.votes || 0));
